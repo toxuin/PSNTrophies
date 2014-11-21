@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/primary_material_light</color>
+    <color name="colorPrimaryDark">@color/primary_material_dark</color>
+
+    <color name="colorSecondary">@color/material_deep_teal_200</color>
+    <color name="colorSecondaryDark">@color/material_deep_teal_500</color>
+
+    <color name="windowBackgroundColor">@color/background_material_light</color>
+    <color name="black_translucent">#80000000</color>
+    <color name="lightLvlColor">#fffff528</color>
+    <color name="usualLvlColor">#ff2f2f2f</color>
+    <color name="someRandomLimeyColor">#95c91d</color>
+
+    <color name="separatorColor">#ff535353</color>
+    <color name="colorSecondaryTextDark">#ff535353</color>
+
+</resources>
