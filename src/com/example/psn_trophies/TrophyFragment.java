@@ -47,7 +47,6 @@ public class TrophyFragment extends Fragment {
         trophyName.setText(trophy.getName());
         trophyDescription.setText(trophy.getDescription());
         RemoteResourceHandler.loadIconForTrophy(trophy.getGame().getId(), trophy.getId(), trophyImage);
-        //trophyImage.setImageBitmap(RemoteResourceHandler.getIconForTrophy(trophy.getGame().getId(), trophy.getId()));
         trophyColorImage.setImageResource(trophy.getColor().getDrawableResource());
 
         WebView commentPanel = (WebView) rootView.findViewById(R.id.trophy_comment_panel);

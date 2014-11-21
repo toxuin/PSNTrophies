@@ -40,18 +40,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class RemoteResourceHandler {
-    //private static RemoteResourceHandler instance;
     public static final String SERVER_URL = "http://nighthunters.ca/psn_trophies/";
 
-    private RemoteResourceHandler() {}
-
-    /*
-    public static RemoteResourceHandler getInstance() {
-        if (instance == null) {
-            instance = new RemoteResourceHandler();
-        }
-        return instance;
-    }*/
+    private RemoteResourceHandler() {} // NO TOUCHY
 
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -101,7 +92,7 @@ public class RemoteResourceHandler {
     }
 
     public static void loadAdapterWithTrophiesForGame(int gameId, ListView listView) {
-        loadAdapterWithUrl("?game="+gameId, listView);
+        loadAdapterWithUrl("?trophies&game="+gameId, listView);
     }
 
     private static void loadAdapterWithUrl(String url, ListView listView) {
