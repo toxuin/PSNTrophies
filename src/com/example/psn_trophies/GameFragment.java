@@ -5,10 +5,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.example.psn_trophies.entities.Game;
 import com.example.psn_trophies.entities.Trophy;
+import com.example.psn_trophies.library.RemoteResourceHandler;
 import com.example.psn_trophies.library.SearchResultsAdapter;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public class GameFragment extends Fragment {
         TextView silverCount = (TextView) rootView.findViewById(R.id.game_silver_count);
         TextView bronzeCount = (TextView) rootView.findViewById(R.id.game_bronze_count);
         TextView gameTotalCaption = (TextView) rootView.findViewById(R.id.game_total);
+        ImageView gameImage = (ImageView) rootView.findViewById(R.id.game_icon);
 
         gameNameCaption.setText(game.getName());
         platinumCount.setText(""+game.getPlatinum());
@@ -41,18 +44,11 @@ public class GameFragment extends Fragment {
         bronzeCount.setText(""+game.getBronze());
         gameTotalCaption.setText("Total: " + String.format("%,d", game.getPoints()) + " points, " + game.getTotalTrophyCount() + " trophies");
 
+        RemoteResourceHandler.loadIconForGame(game.getId(), gameImage);
+
         ListView trophyList = (ListView) rootView.findViewById(R.id.game_trophy_list);
 
-        ArrayList<Trophy> items = new ArrayList<>();
-        items.add(new Trophy(12, "Red Dead Rape", description, game, Trophy.TrophyColor.BRONZE));
-        items.add(new Trophy(12, "Red Dead Rape", description, game, Trophy.TrophyColor.BRONZE));
-        items.add(new Trophy(12, "Red Dead Rape", description, game, Trophy.TrophyColor.BRONZE));
-        items.add(new Trophy(12, "Red Dead Rape", description, game, Trophy.TrophyColor.BRONZE));
-
-        SearchResultsAdapter adapter = new SearchResultsAdapter(getActivity(), items);
-        trophyList.setAdapter(adapter.setIngame());
-        trophyList.setOnItemClickListener(adapter.searchReslutsItemClickListener);
-
+        RemoteResourceHandler.loadAdapterWithTrophiesForGame(game.getId(), trophyList);
         return rootView;
     }
 

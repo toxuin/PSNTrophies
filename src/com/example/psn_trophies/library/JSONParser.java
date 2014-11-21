@@ -22,6 +22,7 @@ public class JSONParser {
         try {
             DefaultHttpClient httpClient = new DefaultHttpClient();
             HttpPost httpPost = new HttpPost(url);
+            Log.d("PARSER", "URL: " + url);
             HttpResponse httpResponse = httpClient.execute(httpPost);
             HttpEntity httpEntity = httpResponse.getEntity();
             is = httpEntity.getContent();

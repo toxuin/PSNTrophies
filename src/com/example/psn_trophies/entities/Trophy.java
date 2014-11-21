@@ -27,6 +27,27 @@ public class Trophy extends SearchResultItem {
     public enum TrophyColor {
         PLATINUM, GOLD, SILVER, BRONZE;
 
+        public int getServerInt() {
+            switch (this) {
+                default:
+                case BRONZE:
+                    return 0;
+                case SILVER:
+                    return 1;
+                case GOLD:
+                    return 2;
+                case PLATINUM:
+                    return 3;
+            }
+        }
+
+        public static TrophyColor getColorByServerInt(int serverInt) {
+            for (int i = 0; i < TrophyColor.values().length; i++) {
+                if (TrophyColor.values()[i].getServerInt() == serverInt) return TrophyColor.values()[i];
+            }
+            return null;
+        }
+
         public int getDrawableResource() {
             switch (this) {
                 case PLATINUM:

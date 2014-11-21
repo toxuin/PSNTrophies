@@ -54,7 +54,7 @@ public class SearchResultsAdapter<T extends SearchResultItem> extends ArrayAdapt
             if (itemsList.get(position) instanceof Game) {
                 platformPanel.setVisibility(View.VISIBLE);
                 Game game = (Game) itemsList.get(position);
-                //imgView.setImageBitmap(RemoteResourceHandler.getSmallIconForGameId(itemsList.get(position).getId()));
+                RemoteResourceHandler.loadSmallIconForGame(game.getId(), imgView);
                 if (Arrays.asList(game.getPlatforms()).contains(Platform.PS3)) {
                     ps3platform.setVisibility(View.VISIBLE);
                 }
@@ -66,8 +66,7 @@ public class SearchResultsAdapter<T extends SearchResultItem> extends ArrayAdapt
                 }
             } else if (itemsList.get(position) instanceof Trophy) {
                 Trophy trophy = (Trophy) itemsList.get(position);
-                //imgView.setImageBitmap(RemoteResourceHandler.getSmallIconForTrophy(((Trophy) itemsList.get(position)).getGame().getId(), itemsList.get(position).getId()));
-                imgView.setImageResource(R.drawable.sample_trophy_icon_small);
+                RemoteResourceHandler.loadSmallIconForTrophy(trophy.getGame().getId(), trophy.getId(), imgView);
                 if (!inGame) {
                     TextView supportText = (TextView) rowView.findViewById(R.id.item_support_text);
                     supportText.setVisibility(View.VISIBLE);

@@ -27,4 +27,11 @@ public enum Platform {
                 return 2;
         }
     }
+
+    public static Platform getPlatformByServerInt(int serverInt) {
+        for (int i = 0; i < Platform.values().length; i++) {
+            if (Platform.values()[i].getServerInt() == serverInt) return Platform.values()[i];
+        }
+        return null;
+    }
 }

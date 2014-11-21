@@ -19,6 +19,16 @@ public class Game extends SearchResultItem {
         this.platinum = platinum;
     }
 
+    public Game(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.platforms = new Platform[] {Platform.PS3};
+        this.platinum = 0;
+        this.gold = 0;
+        this.silver = 0;
+        this.bronze = 0;
+    }
+
     public int getTotalTrophyCount() {
         return platinum + gold + silver + bronze;
     }
