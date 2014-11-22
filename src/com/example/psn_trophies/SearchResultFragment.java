@@ -14,6 +14,7 @@ import com.example.psn_trophies.library.RemoteResourceHandler;
 public class SearchResultFragment extends Fragment {
     View rootView;
     Scope scope;
+    private String query;
 
     public SearchResultFragment() {} // SUBCLASSES OF FRAGMENT NEED EMPTY CONSTRUCTOR
 
@@ -27,7 +28,11 @@ public class SearchResultFragment extends Fragment {
         ListView itemsList = (ListView) rootView.findViewById(R.id.itemsList);
 
         if (scope == null) {
-            RemoteResourceHandler.loadAdapterWithAllGamesAndTrophies(itemsList);
+            if (query == null) {
+                RemoteResourceHandler.loadAdapterWithAllGamesAndTrophies(itemsList);
+            } else {
+                RemoteResourceHandler.loadAdapterWithQuery(query, itemsList);
+            }
         } else {
             switch (scope) {
                 case GAMES:
@@ -46,6 +51,11 @@ public class SearchResultFragment extends Fragment {
 
     public void setScope(Scope scope) {
         this.scope = scope;
+    }
+
+    public Fragment setSearchQuery(String query) {
+        this.query = query;
+        return this;
     }
 
     enum Scope {

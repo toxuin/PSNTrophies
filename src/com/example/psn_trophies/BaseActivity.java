@@ -1,23 +1,31 @@
 package com.example.psn_trophies;
 
+import android.app.SearchManager;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import com.example.psn_trophies.library.RemoteResourceHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +40,7 @@ public class BaseActivity extends ActionBarActivity {
     FragmentManager fragmentManager;
     Fragment activeFragment;
     static BaseActivity self;
+    public List<String> suggestionItems = new ArrayList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -101,13 +110,65 @@ public class BaseActivity extends ActionBarActivity {
             }
         });*/
 
+        RemoteResourceHandler.getSearchSuggestions(suggestionItems, self);
+
     }
+
+    SearchView searchView;
+    SearchManager manager;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_actions, menu);
+        getMenuInflater().inflate(R.menu.main_actions, menu);
         this.menu = menu;
+
+        manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        searchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+            @Override
+            public boolean onSuggestionSelect(int i) {
+                return true;
+            }
+
+            @Override
+            public boolean onSuggestionClick(int i) {
+                SuggestionAdapter adapter = (SuggestionAdapter) searchView.getSuggestionsAdapter();
+                BaseActivity.setContent(new SearchResultFragment().setSearchQuery(adapter.getItemAt(i)));
+                return true;
+            }
+        });
+
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String result) {
+                BaseActivity.setContent(new SearchResultFragment().setSearchQuery(result));
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                String[] columns = new String[] { "_id", "text" };
+                Object[] temp = new Object[] { 0, "default" };
+
+                List<String> strings = new ArrayList<>();
+                final MatrixCursor cursor = new MatrixCursor(columns);
+                for (int i = 0; i < suggestionItems.size(); i++) {
+                    if (suggestionItems.get(i).toLowerCase().startsWith(s.toLowerCase())) {
+                        strings.add(suggestionItems.get(i));
+                        temp[0] = i;
+                        temp[1] = suggestionItems.get(i);
+                        cursor.addRow(temp);
+                    }
+                }
+
+                searchView.setSuggestionsAdapter(new SuggestionAdapter(self, cursor, strings));
+
+                return true;
+            }
+        });
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -128,5 +189,34 @@ public class BaseActivity extends ActionBarActivity {
         self.fragmentManager.beginTransaction().replace(R.id.content, fragment)
             .addToBackStack(null)
             .commit();
+    }
+
+    private class SuggestionAdapter extends CursorAdapter {
+        private List<String> adapterItems;
+        private TextView textView;
+
+        public SuggestionAdapter(Context context, Cursor cursor, List<String> items) {
+            super(context, cursor, false);
+            this.adapterItems = items;
+        }
+
+        public String getItemAt(int position) {
+            return adapterItems.get(position);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            View view = inflater.inflate(R.layout.search_item, viewGroup, false);
+            textView = (TextView) view.findViewById(R.id.text);
+
+            return view;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            textView.setText(adapterItems.get(cursor.getPosition()));
+        }
     }
 }

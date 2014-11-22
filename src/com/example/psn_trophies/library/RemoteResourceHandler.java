@@ -36,8 +36,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 
 public class RemoteResourceHandler {
     public static final String SERVER_URL = "http://nighthunters.ca/psn_trophies/";
@@ -95,11 +98,27 @@ public class RemoteResourceHandler {
         loadAdapterWithUrl("?trophies&game="+gameId, listView);
     }
 
+    public static void loadAdapterWithQuery(String query, ListView listView) {
+        try {
+            String url = "?search="+ URLEncoder.encode(query, "UTF-8");
+            Log.d("JSON", "URL: " + url);
+            loadAdapterWithUrl(url, listView);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace(); // NOT GONNA HAPPEN
+        }
+    }
+
     private static void loadAdapterWithUrl(String url, ListView listView) {
         if (url == null) return;
         if (!isNetworkAvailable(listView.getContext().getApplicationContext())) return;
         new DataDownloader(new WeakReference<>(listView))
                 .execute(url);
+    }
+
+    public static void getSearchSuggestions(List<String> listToPopulate, Context context) {
+        if (listToPopulate == null) return;
+        if (!isNetworkAvailable(context.getApplicationContext())) return;
+        new SearchSuggestionDownloader(new WeakReference<>(listToPopulate)).execute();
     }
 
     // END JSON STUFF
@@ -191,8 +210,6 @@ public class RemoteResourceHandler {
 
     private static class DataDownloader extends AsyncTask<String, Void, JSONObject> {
         private static final String TAG_ROOT = "psn";
-        private static final String TAG_ID = "id";
-        private static final String TAG_NAME = "name";
         private final WeakReference<ListView> listViewReference;
         private ProgressDialog pDialog;
 
@@ -289,6 +306,51 @@ public class RemoteResourceHandler {
                     e1.printStackTrace();
                     Toast.makeText(listView.getContext(), "ERROR: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
+            }
+        }
+    }
+
+
+    // SUGGESTION PARSER
+    // SUGGESTION PARSER
+    // SUGGESTION PARSER
+
+
+    private static class SearchSuggestionDownloader extends AsyncTask<Void, Void, JSONObject> {
+        private static final String TAG_ROOT = "suggestions";
+        private final WeakReference<List<String>> listReference;
+
+        private SearchSuggestionDownloader(WeakReference<List<String>> list) {
+            this.listReference = list;
+        }
+
+        @Override
+        protected JSONObject doInBackground(Void... params) {
+            JSONParser jParser = new JSONParser();
+            return jParser.getJSONFromUrl(SERVER_URL + "?suggestions");
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject json) {
+            if (listReference == null) return;
+            List<String> list = listReference.get();
+            if (list == null) return;
+
+
+            try {
+                Log.d("JSON", json.toString());
+                JSONArray array = json.getJSONArray(TAG_ROOT);
+
+                if (json.isNull(TAG_ROOT)) {
+                    Log.d("JSON", json.getString("error"));
+                    return;
+                }
+
+                for (int i = 0; i < array.length(); i++) {
+                    list.add(array.getString(i));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
