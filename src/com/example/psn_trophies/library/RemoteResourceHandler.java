@@ -13,6 +13,7 @@ import android.net.NetworkInfo;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -60,11 +61,13 @@ public class RemoteResourceHandler {
     }
 
     public static void loadSmallIconForGame(int gameId, ImageView placeholder) {
-        loadRemoteImageIntoImageView("images/game/" + gameId + "_small.png", placeholder);
+        loadIconForGame(gameId, placeholder);
+        //loadRemoteImageIntoImageView("images/game/" + gameId + "_small.png", placeholder);
     }
 
     public static void loadSmallIconForTrophy(int gameId, int trophyId, ImageView placeholder) {
-        loadRemoteImageIntoImageView("images/trophy/" + gameId + "/"+ trophyId + "_small.png", placeholder);
+        loadIconForTrophy(gameId, trophyId, placeholder);
+        //loadRemoteImageIntoImageView("images/trophy/" + gameId + "/"+ trophyId + "_small.png", placeholder);
     }
 
     public static void loadIconForTrophy(int gameId, int trophyId, ImageView placeholder) {
@@ -73,9 +76,13 @@ public class RemoteResourceHandler {
 
     private static void loadRemoteImageIntoImageView(String url, ImageView placeholder) {
         if (placeholder == null) return;
-        if (!isNetworkAvailable(placeholder.getContext().getApplicationContext())) return;
-        new BitmapDownloader(new WeakReference<>(placeholder))
-                .execute(SERVER_URL + url);
+        if (MemCache.getInstance().getBitmapFromMemCache(url) == null) {
+            if (!isNetworkAvailable(placeholder.getContext().getApplicationContext())) return;
+            new BitmapDownloader(new WeakReference<>(placeholder))
+                    .execute(url);
+        } else {
+            placeholder.setImageBitmap(MemCache.getInstance().getBitmapFromMemCache(url));
+        }
     }
 
     // END BITMAP STUFF
@@ -95,7 +102,7 @@ public class RemoteResourceHandler {
     }
 
     public static void loadAdapterWithTrophiesForGame(int gameId, ListView listView) {
-        loadAdapterWithUrl("?trophies&game="+gameId, listView);
+        loadInGameAdapterWithUrl("?trophies&game="+gameId, listView);
     }
 
     public static void loadAdapterWithQuery(String query, ListView listView) {
@@ -111,8 +118,13 @@ public class RemoteResourceHandler {
     private static void loadAdapterWithUrl(String url, ListView listView) {
         if (url == null) return;
         if (!isNetworkAvailable(listView.getContext().getApplicationContext())) return;
-        new DataDownloader(new WeakReference<>(listView))
-                .execute(url);
+        new DataDownloader(new WeakReference<>(listView)).execute(url);
+    }
+
+    private static void loadInGameAdapterWithUrl(String url, ListView listView) {
+        if (url == null) return;
+        if (!isNetworkAvailable(listView.getContext().getApplicationContext())) return;
+        new DataDownloader(new WeakReference<>(listView)).setInGame().execute(url);
     }
 
     public static void getSearchSuggestions(List<String> listToPopulate, Context context) {
@@ -129,6 +141,7 @@ public class RemoteResourceHandler {
 
     private static class BitmapDownloader extends AsyncTask<String, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
+        private String imgUrl;
 
         private BitmapDownloader(WeakReference imageView) {
             this.imageViewReference = imageView;
@@ -149,8 +162,9 @@ public class RemoteResourceHandler {
 
         @Override
         protected Bitmap doInBackground(String... params) {
-            String url = params[0];
-            if (url == null) return null;
+            if (params[0] == null) return null;
+            String url = SERVER_URL + params[0];
+            imgUrl = params[0];
             final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
             final HttpGet getRequest = new HttpGet(url);
             try {
@@ -197,6 +211,7 @@ public class RemoteResourceHandler {
                 imageView.setImageDrawable(imageView.getContext().getResources()
                         .getDrawable(R.drawable.no_image));
             } else {
+                MemCache.getInstance().addBitmapToMemoryCache(imgUrl, bitmap);
                 imageView.setImageBitmap(bitmap);
             }
         }
@@ -212,6 +227,7 @@ public class RemoteResourceHandler {
         private static final String TAG_ROOT = "psn";
         private final WeakReference<ListView> listViewReference;
         private ProgressDialog pDialog;
+        private boolean inGame = false;
 
         private DataDownloader(WeakReference<ListView> listView) {
             this.listViewReference = listView;
@@ -295,6 +311,7 @@ public class RemoteResourceHandler {
                 }
 
                 SearchResultsAdapter adapter = new SearchResultsAdapter<>(listView.getContext(), items);
+                if (inGame) adapter.setIngame();
                 listView.setAdapter(adapter);
                 listView.setOnItemClickListener(adapter.searchReslutsItemClickListener);
             } catch (JSONException e) {
@@ -307,6 +324,11 @@ public class RemoteResourceHandler {
                     Toast.makeText(listView.getContext(), "ERROR: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
+        }
+
+        public DataDownloader setInGame() {
+            this.inGame = true;
+            return this;
         }
     }
 
@@ -335,7 +357,7 @@ public class RemoteResourceHandler {
             if (listReference == null) return;
             List<String> list = listReference.get();
             if (list == null) return;
-
+            if (json == null) return;
 
             try {
                 Log.d("JSON", json.toString());
