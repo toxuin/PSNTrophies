@@ -261,7 +261,6 @@ public class RemoteResourceHandler {
             ListView listView = listViewReference.get();
             if (listView == null) return;
 
-           // Log.d("JSON", json.toString());
             ArrayList<SearchResultItem> items = new ArrayList<>();
             try {
                 // Getting JSON Array from URL

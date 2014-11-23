@@ -125,6 +125,7 @@ public class BaseActivity extends ActionBarActivity {
         manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
         searchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        searchView.setFocusable(false);
         searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
             @Override
             public boolean onSuggestionSelect(int i) {
@@ -140,7 +141,6 @@ public class BaseActivity extends ActionBarActivity {
         });
 
         searchView.setOnQueryTextListener(new OnQueryTextListener() {
-
             @Override
             public boolean onQueryTextSubmit(String result) {
                 BaseActivity.setContent(new SearchResultFragment().setSearchQuery(result));
