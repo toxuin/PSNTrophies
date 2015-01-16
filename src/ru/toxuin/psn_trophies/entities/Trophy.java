@@ -1,6 +1,6 @@
-package com.example.psn_trophies.entities;
+package ru.toxuin.psn_trophies.entities;
 
-import com.example.psn_trophies.R;
+import ru.toxuin.psn_trophies.R;
 
 public class Trophy extends SearchResultItem {
     private final int id;

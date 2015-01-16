@@ -1,4 +1,4 @@
-package com.example.psn_trophies;
+package ru.toxuin.psn_trophies;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,8 +15,8 @@ import android.widget.AbsoluteLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.example.psn_trophies.entities.Trophy;
-import com.example.psn_trophies.library.RemoteResourceHandler;
+import ru.toxuin.psn_trophies.entities.Trophy;
+import ru.toxuin.psn_trophies.library.RemoteResourceHandler;
 
 /**
  * This represents a view with particular trophy

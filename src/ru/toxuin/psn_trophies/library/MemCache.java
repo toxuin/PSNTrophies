@@ -1,4 +1,4 @@
-package com.example.psn_trophies.library;
+package ru.toxuin.psn_trophies.library;
 
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;

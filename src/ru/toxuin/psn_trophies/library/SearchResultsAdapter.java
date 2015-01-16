@@ -1,4 +1,4 @@
-package com.example.psn_trophies.library;
+package ru.toxuin.psn_trophies.library;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,14 +10,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.psn_trophies.BaseActivity;
-import com.example.psn_trophies.GameFragment;
-import com.example.psn_trophies.R;
-import com.example.psn_trophies.TrophyFragment;
-import com.example.psn_trophies.entities.Game;
-import com.example.psn_trophies.entities.Platform;
-import com.example.psn_trophies.entities.SearchResultItem;
-import com.example.psn_trophies.entities.Trophy;
+import ru.toxuin.psn_trophies.BaseActivity;
+import ru.toxuin.psn_trophies.GameFragment;
+import ru.toxuin.psn_trophies.R;
+import ru.toxuin.psn_trophies.TrophyFragment;
+import ru.toxuin.psn_trophies.entities.Game;
+import ru.toxuin.psn_trophies.entities.Platform;
+import ru.toxuin.psn_trophies.entities.SearchResultItem;
+import ru.toxuin.psn_trophies.entities.Trophy;
 
 import java.util.ArrayList;
 import java.util.Arrays;

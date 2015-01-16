@@ -1,4 +1,4 @@
-package com.example.psn_trophies;
+package ru.toxuin.psn_trophies;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -8,12 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import com.example.psn_trophies.entities.Game;
-import com.example.psn_trophies.entities.Trophy;
-import com.example.psn_trophies.library.RemoteResourceHandler;
-import com.example.psn_trophies.library.SearchResultsAdapter;
-
-import java.util.ArrayList;
+import ru.toxuin.psn_trophies.entities.Game;
+import ru.toxuin.psn_trophies.library.RemoteResourceHandler;
 
 /**
  * This represents the view where user browses all the trophies for a particular game.

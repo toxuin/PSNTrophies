@@ -1,4 +1,4 @@
-package com.example.psn_trophies.library;
+package ru.toxuin.psn_trophies.library;
 
 import android.util.Log;
 import org.apache.http.HttpEntity;
@@ -13,10 +13,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class JSONParser {
-    static InputStream is = null;
-    static JSONObject jObj = null;
-    static String json = "";
-    public JSONParser() {}
+    private InputStream is = null;
+    private JSONObject jObj = null;
+    private String json = "";
 
     public JSONObject getJSONFromUrl(String url) {
         try {

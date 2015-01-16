@@ -1,4 +1,4 @@
-package com.example.psn_trophies.entities;
+package ru.toxuin.psn_trophies.entities;
 
 public enum Platform {
     VITA, PS3, PS4;

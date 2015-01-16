@@ -1,33 +1,26 @@
-package com.example.psn_trophies.library;
+package ru.toxuin.psn_trophies.library;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Animatable;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
-import android.support.v4.util.LruCache;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-import com.example.psn_trophies.R;
-import com.example.psn_trophies.entities.Game;
-import com.example.psn_trophies.entities.HeaderItem;
-import com.example.psn_trophies.entities.Platform;
-import com.example.psn_trophies.entities.SearchResultItem;
-import com.example.psn_trophies.entities.Trophy;
-import com.example.psn_trophies.entities.Trophy.TrophyColor;
+import ru.toxuin.psn_trophies.R;
+import ru.toxuin.psn_trophies.entities.Game;
+import ru.toxuin.psn_trophies.entities.HeaderItem;
+import ru.toxuin.psn_trophies.entities.Platform;
+import ru.toxuin.psn_trophies.entities.SearchResultItem;
+import ru.toxuin.psn_trophies.entities.Trophy;
+import ru.toxuin.psn_trophies.entities.Trophy.TrophyColor;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -47,6 +40,12 @@ public class RemoteResourceHandler {
     public static final String SERVER_URL = "http://nighthunters.ca/psn_trophies/";
 
     private RemoteResourceHandler() {} // NO TOUCHY
+
+    private static SQLCache dataCache = null;
+
+    public static void initCache(Context context) {
+        dataCache = SQLCache.getInstance(context);
+    }
 
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -241,22 +240,27 @@ public class RemoteResourceHandler {
             if (listView == null) return;
 
             pDialog = new ProgressDialog(listView.getContext());
-            pDialog.setMessage("Getting Data ...");
+            pDialog.setMessage("Getting Data...");
             pDialog.setIndeterminate(false);
             pDialog.setCancelable(true);
-            pDialog.show();
+            if (listView.isShown()) {
+                pDialog.show();
+            }
         }
 
         @Override
         protected JSONObject doInBackground(String... args) {
-            JSONParser jParser = new JSONParser();
             if (args[0] == null) return null;
-            return jParser.getJSONFromUrl(SERVER_URL + args[0]);
+            JSONParser jParser = new JSONParser();
+
+            JSONObject json = jParser.getJSONFromUrl(SERVER_URL + args[0]);
+            return json;
         }
 
         @Override
         protected void onPostExecute(JSONObject json) {
             pDialog.dismiss();
+            if (json == null) return;
             if (listViewReference == null) return;
             ListView listView = listViewReference.get();
             if (listView == null) return;

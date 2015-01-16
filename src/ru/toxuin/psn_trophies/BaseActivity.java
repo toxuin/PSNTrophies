@@ -1,4 +1,4 @@
-package com.example.psn_trophies;
+package ru.toxuin.psn_trophies;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -15,7 +15,6 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,13 +24,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import com.example.psn_trophies.library.RemoteResourceHandler;
+import ru.toxuin.psn_trophies.library.RemoteResourceHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.example.psn_trophies.SearchResultFragment.Scope;
+import ru.toxuin.psn_trophies.SearchResultFragment.Scope;
 
 public class BaseActivity extends ActionBarActivity {
     DrawerLayout drawer;

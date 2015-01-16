@@ -1,14 +1,12 @@
-package com.example.psn_trophies;
+package ru.toxuin.psn_trophies;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import com.example.psn_trophies.library.RemoteResourceHandler;
+import ru.toxuin.psn_trophies.library.RemoteResourceHandler;
 
 /**
  * Represents a view with top 10 games and trophies OR search results.
@@ -28,6 +26,7 @@ public class SearchResultFragment extends Fragment {
         else if (scope == Scope.TROPHIES) title = "Top 10 trophies";
         getActivity().setTitle(title);
         ListView itemsList = (ListView) rootView.findViewById(R.id.itemsList);
+        RemoteResourceHandler.initCache(this.getActivity());
 
         if (scope == null) {
             if (query == null) {
