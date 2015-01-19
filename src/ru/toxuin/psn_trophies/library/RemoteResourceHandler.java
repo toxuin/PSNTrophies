@@ -89,42 +89,66 @@ public class RemoteResourceHandler {
     // START JSON STUFF
 
     public static void loadAdapterWithAllGamesAndTrophies(ListView listView) {
-        loadAdapterWithUrl("", listView);
+        loadAdapterWithContextAndUrl(listView, new AdapterContext(true, true, null), "");
     }
 
     public static void loadAdapterWithAllTrophies(ListView listView) {
-        loadAdapterWithUrl("?trophies", listView);
+        loadAdapterWithContextAndUrl(listView, new AdapterContext(true, false, null), "?trophies");
     }
 
     public static void loadAdapterWithAllGames(ListView listView) {
-        loadAdapterWithUrl("?games", listView);
+        loadAdapterWithContextAndUrl(listView, new AdapterContext(false, true, null), "?games");
     }
 
     public static void loadAdapterWithTrophiesForGame(int gameId, ListView listView) {
-        loadInGameAdapterWithUrl("?trophies&game="+gameId, listView);
+        loadAdapterWithContextAndUrl(listView, new AdapterContext(true, false, dataCache.getGame(gameId)), "?trophies&game=" + gameId);
     }
+
+    private static void loadAdapterWithContextAndUrl(ListView listView, AdapterContext context, String url) {
+        if (context == null || listView == null) return;
+
+        // TRY TO DOWNLOAD FIRST!
+        if (isNetworkAvailable(listView.getContext().getApplicationContext())) {
+            new DataDownloader(new WeakReference<>(listView)).execute(url);
+        }
+
+
+        // CREATE STRUCTURE HOLDING GAMES & TROPHIES
+        ArrayList<SearchResultItem> items = new ArrayList<>();
+        if (context.hasGames) {
+            items.add(new HeaderItem("Games").beHeader());
+            items.addAll(dataCache.getTopGames(10));
+        }
+
+        if (context.hasTrophies) {
+            items.add(new HeaderItem("Trophies").beHeader());
+            if (context.getGame() != null) {
+                items.addAll(dataCache.getTopTrophies(10));
+            } else {
+                items.addAll(dataCache.getTrophiesForGame(context.getGame()));
+            }
+        }
+
+        // DRAW STUFF FROM DB
+        SearchResultsAdapter adapter = new SearchResultsAdapter<>(listView.getContext(), items);
+        if (context.getGame() != null) adapter.setIngame();
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(adapter.searchReslutsItemClickListener);
+    }
+
+
+
 
     public static void loadAdapterWithQuery(String query, ListView listView) {
         try {
             String url = "?search="+ URLEncoder.encode(query, "UTF-8");
             Log.d("JSON", "URL: " + url);
-            loadAdapterWithUrl(url, listView);
+            loadAdapterWithContextAndUrl(listView, new AdapterContext(true, true, null), url);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace(); // NOT GONNA HAPPEN
         }
     }
 
-    private static void loadAdapterWithUrl(String url, ListView listView) {
-        if (url == null) return;
-        if (!isNetworkAvailable(listView.getContext().getApplicationContext())) return;
-        new DataDownloader(new WeakReference<>(listView)).execute(url);
-    }
-
-    private static void loadInGameAdapterWithUrl(String url, ListView listView) {
-        if (url == null) return;
-        if (!isNetworkAvailable(listView.getContext().getApplicationContext())) return;
-        new DataDownloader(new WeakReference<>(listView)).setInGame().execute(url);
-    }
 
     public static void getSearchSuggestions(List<String> listToPopulate, Context context) {
         if (listToPopulate == null) return;
@@ -226,7 +250,6 @@ public class RemoteResourceHandler {
         private static final String TAG_ROOT = "psn";
         private final WeakReference<ListView> listViewReference;
         private ProgressDialog pDialog;
-        private boolean inGame = false;
 
         private DataDownloader(WeakReference<ListView> listView) {
             this.listViewReference = listView;
@@ -251,21 +274,23 @@ public class RemoteResourceHandler {
         @Override
         protected JSONObject doInBackground(String... args) {
             if (args[0] == null) return null;
-            JSONParser jParser = new JSONParser();
 
-            JSONObject json = jParser.getJSONFromUrl(SERVER_URL + args[0]);
-            return json;
+            ListView listView = listViewReference.get();
+            if (listView == null) return null;
+
+            if (isNetworkAvailable(listView.getContext().getApplicationContext())) {
+                return new JSONParser().getJSONFromUrl(SERVER_URL + args[0]);
+            } else return null;
         }
 
         @Override
         protected void onPostExecute(JSONObject json) {
             pDialog.dismiss();
-            if (json == null) return;
             if (listViewReference == null) return;
             ListView listView = listViewReference.get();
             if (listView == null) return;
+            if (isNetworkAvailable(listView.getContext().getApplicationContext()) && json == null) return;
 
-            ArrayList<SearchResultItem> items = new ArrayList<>();
             try {
                 // Getting JSON Array from URL
                 JSONArray array = json.getJSONArray(TAG_ROOT);
@@ -277,8 +302,8 @@ public class RemoteResourceHandler {
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject partition = array.getJSONObject(i);
 
+                    // POPULATE DB WITH GAMES & TROPHIES
                     if (!partition.isNull("games") && partition.getJSONArray("games").length() > 0) {
-                        items.add(new HeaderItem("Games").beHeader());
                         JSONArray gamesArray = partition.getJSONArray("games");
                         for (int e = 0; e < gamesArray.length(); e++) {
                             JSONObject game = gamesArray.getJSONObject(e);
@@ -293,12 +318,12 @@ public class RemoteResourceHandler {
                             int gold = game.getInt("gold");
                             int silver = game.getInt("silver");
                             int bronze = game.getInt("bronze");
-                            items.add(new Game(id, name, platforms, platinum, gold, silver, bronze));
+                            Game g = new Game(id, name, platforms, platinum, gold, silver, bronze);
+                            if (dataCache != null) dataCache.saveGame(g);
                         }
                     }
 
                     if (!partition.isNull("trophies") && partition.getJSONArray("trophies").length() > 0) {
-                        items.add(new HeaderItem("Trophies").beHeader());
                         JSONArray trophiesArray = partition.getJSONArray("trophies");
                         for (int j = 0; j < trophiesArray.length(); j++) {
                             JSONObject trophy = trophiesArray.getJSONObject(j);
@@ -308,15 +333,17 @@ public class RemoteResourceHandler {
                             int gameId = trophy.getInt("game_id");
                             String gameName = trophy.getString("game_name");
                             TrophyColor color = TrophyColor.getColorByServerInt(trophy.getInt("color"));
-                            items.add(new Trophy(id, name, description, new Game(gameId, gameName), color));
+                            Game game = new Game(gameId, gameName);
+                            if (dataCache != null) game = dataCache.getGame(id);
+                            if (game == null) game = new Game(gameId, gameName);
+                            Trophy t = new Trophy(id, name, description, game, color);
+                            if (dataCache != null) dataCache.saveTrophy(t);
                         }
                     }
                 }
 
-                SearchResultsAdapter adapter = new SearchResultsAdapter<>(listView.getContext(), items);
-                if (inGame) adapter.setIngame();
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener(adapter.searchReslutsItemClickListener);
+                // HERE WAS THE STUFF THAT DRAWS
+
             } catch (JSONException e) {
                 try {
                     if (json.get("error") != null) {
@@ -327,11 +354,6 @@ public class RemoteResourceHandler {
                     Toast.makeText(listView.getContext(), "ERROR: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
-        }
-
-        public DataDownloader setInGame() {
-            this.inGame = true;
-            return this;
         }
     }
 

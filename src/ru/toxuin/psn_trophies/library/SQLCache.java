@@ -9,10 +9,15 @@ import android.util.Log;
 import org.apache.commons.lang3.StringUtils;
 import ru.toxuin.psn_trophies.entities.Game;
 import ru.toxuin.psn_trophies.entities.Platform;
+import ru.toxuin.psn_trophies.entities.SearchResultItem;
 import ru.toxuin.psn_trophies.entities.Trophy;
+import ru.toxuin.psn_trophies.entities.Trophy.TrophyColor;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +39,24 @@ public class SQLCache extends SQLiteOpenHelper {
             instance = new SQLCache(context);
         }
         return instance;
+    }
+
+    public List<Game> getTopGames(int count) {
+        if (count == 0) count = 10;
+        List<Game> games = new LinkedList<>();
+        Cursor c = getReadableDatabase().query(TABLE_GAMES,
+                new String[] {"id"}, null, null, null, null, null, "" + count);
+        while (c.moveToNext()) {
+            int id = c.getInt(c.getColumnIndex("id"));
+            Game game;
+            if (gameCache.containsKey(id)) {
+                game = gameCache.get(id);
+            } else {
+                game = getGame(id);
+            }
+            if (game != null) games.add(game);
+        }
+        return games;
     }
 
     /**
@@ -60,7 +83,8 @@ public class SQLCache extends SQLiteOpenHelper {
         for (String p : platformString.split(":")) {
             platformSet.add(Platform.getPlatformByServerInt(Integer.parseInt(p)));
         }
-        Platform[] platforms = (Platform[]) platformSet.toArray();
+
+        Platform[] platforms = platformSet.toArray(new Platform[platformSet.size()]);
 
         Game game = new Game(id, name, platforms, platinum, gold, silver, bronze);
         Log.d("SQLCACHE", "FOUND GAME FOR ID: " + id + ", THAT'S " + game.getName());
@@ -95,6 +119,34 @@ public class SQLCache extends SQLiteOpenHelper {
 
 
 
+    public List<Trophy> getTopTrophies(int count) {
+        if (count == 0) count = 10;
+        List<Trophy> trophies = new LinkedList<>();
+        Cursor c = getReadableDatabase().query(TABLE_TROPHIES,
+                new String[] {"id"}, null, null, null, null, null, "" + count);
+        while (c.moveToNext()) {
+            int id = c.getInt(c.getColumnIndex("id"));
+            Trophy trophy = getTrophy(id);
+            if (trophy != null) trophies.add(trophy);
+        }
+        return trophies;
+    }
+
+    public List<Trophy> getTrophiesForGame(Game game) {
+        Cursor c = getReadableDatabase().query(TABLE_TROPHIES,
+                new String[]{"id"}, "game = " + game.getId(), null, null, null, null);
+        List<Trophy> trophies = new LinkedList<>();
+        while (c.moveToNext()) {
+            int trophyId = c.getInt(c.getColumnIndex("id"));
+            String name = c.getString(c.getColumnIndex("name"));
+            String description = c.getString(c.getColumnIndex("description"));
+            TrophyColor color = TrophyColor.getColorByServerInt(c.getInt(c.getColumnIndex("color")));
+            Trophy t = new Trophy(trophyId, name, description, game, color);
+            trophies.add(t);
+        }
+        return trophies;
+    }
+
 
     public Trophy getTrophy(int id) {
         Cursor c = getReadableDatabase().query(TABLE_GAMES,
@@ -107,7 +159,7 @@ public class SQLCache extends SQLiteOpenHelper {
         int gameId = c.getInt(c.getColumnIndex("game"));
         int color = c.getInt(c.getColumnIndex("color"));
 
-        Trophy trophy = new Trophy(id, name, description, getGame(gameId), Trophy.TrophyColor.getColorByServerInt(color));
+        Trophy trophy = new Trophy(id, name, description, getGame(gameId), TrophyColor.getColorByServerInt(color));
         Log.d("SQLCACHE", "FOUND CACHED TROPHY: " + trophy.getId());
         return trophy;
     }
